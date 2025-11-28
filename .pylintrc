@@ -1,0 +1,20 @@
+[MASTER]
+ignore=CVS
+
+[MESSAGES CONTROL]
+disable=
+    C0114,  ; missing-module-docstring
+    C0115,  ; missing-class-docstring
+    C0116,  ; missing-function-docstring
+    E1101,  ; no-member (cv2, pygame false positives)
+    E0401   ; import-error (cuando usa dependencias en binario)
+
+[TYPECHECK]
+ignored-modules=cv2, pygame
+ignored-classes=cv2.*, pygame.*
+
+[REPORTS]
+output-format=text
+
+[FORMAT]
+max-line-length=120
