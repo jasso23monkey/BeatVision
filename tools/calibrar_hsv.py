@@ -10,9 +10,21 @@ def nada(x):
 # ============================
 # Configuración de la cámara
 # ============================
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
+# Intenta desactivar el balance de blancos automático (Usando el valor numérico 70)
+# Si tu OpenCV no lo soporta, esta línea simplemente no hará efecto.
+cap.set(70, 0.0) 
+
+# Intenta desactivar la exposición automática (Usando el valor numérico 39)
+# 0.25 = modo manual/prioridad de apertura; 1.0 = modo manual/fijo
+cap.set(39, 0.25)
+
+# Propiedades más comunes
+cap.set(cv2.CAP_PROP_SATURATION, 150)  # Fija la saturación a un valor medio/alto
+cap.set(cv2.CAP_PROP_BRIGHTNESS, 100)  # Fija el brillo
 
 if not cap.isOpened():
     print("No se pudo abrir la cámara")
