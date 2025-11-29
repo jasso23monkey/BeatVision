@@ -1,8 +1,21 @@
 import cv2
 import numpy as np
+import pygame
 
 print('Librerías leídas')
 
+# =========================
+# INICIALIZAR PYGAME (SONIDO)
+# =========================
+pygame.mixer.init()
+
+# Carga tu sonido para el color azul
+sonido_azul = pygame.mixer.Sound("assets/sounds/azul.wav")
+sonando_azul = False  # bandera para saber si ya está sonando
+
+# =========================
+# CÁMARA
+# =========================
 cap = cv2.VideoCapture(0)
 cap.set(3, 640)
 cap.set(4, 480)
@@ -26,12 +39,28 @@ verde_cla = np.array([70, 255, 255])
 azul_osc = np.array([90, 60, 0])
 azul_cla = np.array([121, 255, 255])
 
-# Diccionario de colores
+# Diccionario de colores (rangos)
 colores = {
     "Amarillo": (amarillo_osc, amarillo_cla),
     "Rojo":     (rojo_osc, rojo_cla),
     "Verde":    (verde_osc, verde_cla),
     "Azul":     (azul_osc, azul_cla)
+}
+
+# Colores BGR para dibujar los contornos
+colores_bgr = {
+    "Amarillo": (0, 255, 255),
+    "Rojo":     (0, 0, 255),
+    "Verde":    (0, 255, 0),
+    "Azul":     (255, 0, 0)
+}
+
+# Mapear color → “instrumento” (por ahora solo Azul = Kick)
+instrumentos = {
+    "Azul": "Kick"
+    # "Rojo": "Snare",
+    # "Verde": "Hi-Hat",
+    # "Amarillo": "Perc"
 }
 
 AREA_MIN = 5000  # filtro de ruido
@@ -99,6 +128,8 @@ while True:
     # ----------------------------
     # DETECCIÓN DE COLORES
     # ----------------------------
+    azul_en_barra = False  # ¿la barra está cruzando algún azul?
+
     for nombre, (bajo, alto_hsv) in colores.items():
         mask = cv2.inRange(hsv, bajo, alto_hsv)
         contornos, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -106,24 +137,48 @@ while True:
         for c in contornos:
             area = cv2.contourArea(c)
             if area > AREA_MIN:
-                M = cv2.moments(c)
-                if M["m00"] == 0:
-                    continue
+                # Rectángulo que encierra el contorno
+                x, y, w, h = cv2.boundingRect(c)
 
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
+                # Color BGR para dibujar
+                color_bgr = colores_bgr.get(nombre, (255, 255, 255))
 
-                cv2.circle(frame, (cx, cy), 7, (255, 255, 255), -1)
-                cv2.putText(frame, nombre, (cx - 20, cy - 20),
-                            cv2.FONT_HERSHEY_DUPLEX, 2, (255, 255, 255), 2)
+                # Dibujar rectángulo de color alrededor del objeto
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color_bgr, 3)
 
-    # Mostrar el BPM actual también sobre la imagen
-    #cv2.putText(frame, f"BPM: {BPM}", (10, 30),
-    #           cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+                # Texto: si ese color tiene instrumento, usarlo; si no, usar el nombre del color
+                etiqueta = instrumentos.get(nombre, nombre)
+                cv2.putText(frame, etiqueta, (x, y - 10),
+                            cv2.FONT_HERSHEY_DUPLEX, 1, color_bgr, 2)
+
+                # --- SI ES AZUL, CHECAR INTERSECCIÓN CON LA BARRA ---
+                if nombre == "Azul":
+                    azul_x_ini = x
+                    azul_x_fin = x + w
+
+                    barra_x_ini = x_barra
+                    barra_x_fin = x_barra + ancho_barra
+
+                    if barra_x_ini <= azul_x_fin and barra_x_fin >= azul_x_ini:
+                        azul_en_barra = True
+
+    # ----------------------------
+    # LÓGICA DE SONIDO (SOLO CUANDO LA BARRA PASA POR AZUL)
+    # ----------------------------
+    if azul_en_barra and not sonando_azul:
+        sonido_azul.play(-1)   # loop continuo mientras esté cruzando
+        sonando_azul = True
+
+    if not azul_en_barra and sonando_azul:
+        sonido_azul.stop()
+        sonando_azul = False
 
     # ----------------------------
     # MOSTRAR VIDEO
     # ----------------------------
+    cv2.putText(frame, f"BPM: {BPM}", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+
     cv2.imshow("BeatVision", frame)
 
     # ----------------------------
@@ -145,3 +200,4 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
+pygame.mixer.quit()
