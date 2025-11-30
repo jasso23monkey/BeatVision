@@ -9,9 +9,17 @@ print('Librerías leídas')
 # =========================
 pygame.mixer.init()
 
-# Carga tu sonido para el color azul
-sonido_azul = pygame.mixer.Sound("assets/sounds/azul.wav")
-sonando_azul = False  # bandera para saber si ya está sonando
+# Cargar sonidos por color
+sonido_azul      = pygame.mixer.Sound("assets/sounds/azul.wav")
+sonido_rojo      = pygame.mixer.Sound("assets/sounds/rojo.wav")
+sonido_verde     = pygame.mixer.Sound("assets/sounds/verde.wav")
+sonido_amarillo  = pygame.mixer.Sound("assets/sounds/amarillo.wav")
+
+# Banderas para saber si ya están sonando
+sonando_azul     = False
+sonando_rojo     = False
+sonando_verde    = False
+sonando_amarillo = False
 
 # =========================
 # CÁMARA
@@ -45,7 +53,6 @@ verde_cla = np.array([175, 255, 148])
 azul_osc = np.array([90, 60, 0])
 azul_cla = np.array([121, 255, 255])
 
-
 # Colores BGR para dibujar los contornos
 colores_bgr = {
     "Amarillo": (0, 255, 255),
@@ -56,10 +63,10 @@ colores_bgr = {
 
 # Mapear color → “instrumento”
 instrumentos = {
-    "Azul": "Kick",
-    "Rojo": "Snare",
-    "Verde": "Perc",
-    "Amarillo": "Hi-Hat"
+    "Azul":      "Kick",
+    "Rojo":      "Snare",
+    "Verde":     "Perc",
+    "Amarillo":  "Hi-Hat"
 }
 
 AREA_MIN = 500  # filtro de ruido
@@ -73,7 +80,7 @@ BPM = 120                # bpm inicial
 velocidad = 12           # pixeles por frame (se ajusta con BPM)
 moviendo = False         # bandera de movimiento automático
 
-ESCALA = 1  # 90% del tamaño original
+ESCALA = 1  # 100% del tamaño original
 
 def nada(x):
     pass
@@ -138,13 +145,16 @@ while True:
 
     # Resolver solapamiento:
     # PRIORIDAD al ROJO sobre el AMARILLO.
-    # Cualquier píxel que sea rojo se "borra" de amarillo.
     mask_amarillo = cv2.bitwise_and(mask_amarillo, cv2.bitwise_not(mask_rojo))
 
     # ----------------------------
     # DETECCIÓN DE COLORES
     # ----------------------------
-    azul_en_barra = False  # ¿la barra está cruzando algún azul?
+    # Banderas: ¿la barra está cruzando cada color?
+    amarillo_en_barra = False
+    rojo_en_barra     = False
+    verde_en_barra    = False
+    azul_en_barra     = False
 
     for nombre in ["Amarillo", "Rojo", "Verde", "Azul"]:
         if nombre == "Amarillo":
@@ -175,33 +185,61 @@ while True:
                 cv2.putText(frame, etiqueta, (x, y - 10),
                             cv2.FONT_HERSHEY_DUPLEX, 0.45, color_bgr, 1)
 
-                # --- SI ES AZUL, CHECAR INTERSECCIÓN CON LA BARRA ---
-                if nombre == "Azul":
-                    azul_x_ini = x
-                    azul_x_fin = x + w
-                    barra_x_ini = x_barra
-                    barra_x_fin = x_barra + ancho_barra
+                # --- CHECAR INTERSECCIÓN CON LA BARRA ---
+                color_x_ini = x
+                color_x_fin = x + w
+                barra_x_ini = x_barra
+                barra_x_fin = x_barra + ancho_barra
 
-                    if barra_x_ini <= azul_x_fin and barra_x_fin >= azul_x_ini:
+                if barra_x_ini <= color_x_fin and barra_x_fin >= color_x_ini:
+                    if nombre == "Azul":
                         azul_en_barra = True
+                    elif nombre == "Rojo":
+                        rojo_en_barra = True
+                    elif nombre == "Verde":
+                        verde_en_barra = True
+                    elif nombre == "Amarillo":
+                        amarillo_en_barra = True
 
     # ----------------------------
-    # LÓGICA DE SONIDO (SOLO CUANDO LA BARRA PASA POR AZUL)
+    # LÓGICA DE SONIDO (CUANDO LA BARRA PASA POR CADA COLOR)
     # ----------------------------
+
+    # AZUL
     if azul_en_barra and not sonando_azul:
-        sonido_azul.play(-1)   # loop continuo mientras esté cruzando
+        sonido_azul.play(-1)
         sonando_azul = True
-
     if not azul_en_barra and sonando_azul:
         sonido_azul.stop()
         sonando_azul = False
 
+    # ROJO
+    if rojo_en_barra and not sonando_rojo:
+        sonido_rojo.play(-1)
+        sonando_rojo = True
+    if not rojo_en_barra and sonando_rojo:
+        sonido_rojo.stop()
+        sonando_rojo = False
+
+    # VERDE
+    if verde_en_barra and not sonando_verde:
+        sonido_verde.play(-1)
+        sonando_verde = True
+    if not verde_en_barra and sonando_verde:
+        sonido_verde.stop()
+        sonando_verde = False
+
+    # AMARILLO
+    if amarillo_en_barra and not sonando_amarillo:
+        sonido_amarillo.play(-1)
+        sonando_amarillo = True
+    if not amarillo_en_barra and sonando_amarillo:
+        sonido_amarillo.stop()
+        sonando_amarillo = False
+
     # ----------------------------
     # MOSTRAR VIDEO
     # ----------------------------
-    #cv2.putText(frame, f"BPM: {BPM}", (10, 30),
-                #cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 1)
-
     cv2.imshow("BeatVision", frame)
 
     # ----------------------------
