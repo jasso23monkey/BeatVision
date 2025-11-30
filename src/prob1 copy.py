@@ -15,12 +15,6 @@ sonido_rojo      = pygame.mixer.Sound("assets/sounds/rojo.wav")
 sonido_verde     = pygame.mixer.Sound("assets/sounds/verde.wav")
 sonido_amarillo  = pygame.mixer.Sound("assets/sounds/amarillo.wav")
 
-# Banderas para saber si ya están sonando
-sonando_azul     = False
-sonando_rojo     = False
-sonando_verde    = False
-sonando_amarillo = False
-
 # =========================
 # CÁMARA
 # =========================
@@ -97,6 +91,14 @@ cv2.createTrackbar("BPM", "BeatVision", BPM, 200, nada)
 actualizar_velocidad()
 
 # =========================
+# MEMORIA DE CONTACTO (FRAME ANTERIOR)
+# =========================
+amarillo_contacto_prev = False
+rojo_contacto_prev     = False
+verde_contacto_prev    = False
+azul_contacto_prev     = False
+
+# =========================
 # LOOP PRINCIPAL
 # =========================
 while True:
@@ -150,7 +152,7 @@ while True:
     # ----------------------------
     # DETECCIÓN DE COLORES
     # ----------------------------
-    # Banderas: ¿la barra está cruzando cada color?
+    # Banderas actuales: ¿la barra está cruzando cada color?
     amarillo_en_barra = False
     rojo_en_barra     = False
     verde_en_barra    = False
@@ -202,40 +204,28 @@ while True:
                         amarillo_en_barra = True
 
     # ----------------------------
-    # LÓGICA DE SONIDO (CUANDO LA BARRA PASA POR CADA COLOR)
+    # LÓGICA DE SONIDO (GOLPE ÚNICO POR CONTACTO)
     # ----------------------------
 
-    # AZUL
-    if azul_en_barra and not sonando_azul:
-        sonido_azul.play(-1)
-        sonando_azul = True
-    if not azul_en_barra and sonando_azul:
-        sonido_azul.stop()
-        sonando_azul = False
+    # AZUL (Kick)
+    if azul_en_barra and not azul_contacto_prev:
+        sonido_azul.play()
+    azul_contacto_prev = azul_en_barra
 
-    # ROJO
-    if rojo_en_barra and not sonando_rojo:
-        sonido_rojo.play(-1)
-        sonando_rojo = True
-    if not rojo_en_barra and sonando_rojo:
-        sonido_rojo.stop()
-        sonando_rojo = False
+    # ROJO (Snare)
+    if rojo_en_barra and not rojo_contacto_prev:
+        sonido_rojo.play()
+    rojo_contacto_prev = rojo_en_barra
 
-    # VERDE
-    if verde_en_barra and not sonando_verde:
-        sonido_verde.play(-1)
-        sonando_verde = True
-    if not verde_en_barra and sonando_verde:
-        sonido_verde.stop()
-        sonando_verde = False
+    # VERDE (Perc)
+    if verde_en_barra and not verde_contacto_prev:
+        sonido_verde.play()
+    verde_contacto_prev = verde_en_barra
 
-    # AMARILLO
-    if amarillo_en_barra and not sonando_amarillo:
-        sonido_amarillo.play(-1)
-        sonando_amarillo = True
-    if not amarillo_en_barra and sonando_amarillo:
-        sonido_amarillo.stop()
-        sonando_amarillo = False
+    # AMARILLO (Hi-Hat)
+    if amarillo_en_barra and not amarillo_contacto_prev:
+        sonido_amarillo.play()
+    amarillo_contacto_prev = amarillo_en_barra
 
     # ----------------------------
     # MOSTRAR VIDEO
