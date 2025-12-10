@@ -1,6 +1,6 @@
-import cv2
-import numpy as np
-import pygame
+import cv2 # Importa la librería OpenCV (Open Source Computer Vision Library) para el manejo de la cámara y procesamiento de imágenes.
+import numpy as np # Importa NumPy, esencial para el manejo eficiente de arrays y matrices (como las imágenes) en Python.
+import pygame # Importa la librería Pygame, que se utilizará aquí principalmente para la reproducción de audio.
 
 print('Librerías leídas')
 
@@ -18,23 +18,26 @@ sonido_amarillo  = pygame.mixer.Sound("assets/sounds/amarillo.wav")
 # =========================
 # CÁMARA
 # =========================
-cap = cv2.VideoCapture(1)
-cap.set(3, 640)
-cap.set(4, 480)
+cap = cv2.VideoCapture(1)#crea la camara 1, para externa 0 para la de la computadora
+cap.set(3, 640) #ancho de frame 3 a 640 pixeles
+cap.set(4, 480) #ancho de frame 4 a 480 pixeles
 
 # Intentos de fijar parámetros de la cámara
 cap.set(70, 0.0)                 # WB (puede que no funcione en todas las cámaras)
 cap.set(39, 0.25)                # Exposición (puede que no funcione siempre)
-cap.set(cv2.CAP_PROP_SATURATION, 150)
-cap.set(cv2.CAP_PROP_BRIGHTNESS, 100)
+cap.set(cv2.CAP_PROP_SATURATION, 150) #Intenta ponerle saturación a la imagen
+cap.set(cv2.CAP_PROP_BRIGHTNESS, 100) #Intenta ponerle brillo a la imagen
 
-if not cap.isOpened():
+if not cap.isOpened(): #cerrar solo si la camara no es posible abrirla
     print("No se pudo abrir la cámara")
     exit()
 
 # =========================
-# RANGOS HSV (tus rangos)
+# RANGOS HSV 
 # =========================
+
+# Define los rangos de color en el espacio de color HSV (Hue, Saturation, Value) para la detección de objetos.
+# Los valores son [Tono_oscuro, Saturación_oscura, Valor_oscuro] y [Tono_claro, Saturación_clara, Valor_claro].
 amarillo_osc = np.array([10, 120, 100])
 amarillo_cla = np.array([40, 255, 255])
 
